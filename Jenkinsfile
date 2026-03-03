@@ -1,23 +1,26 @@
 pipeline {
     agent any
-environment {
+
+    environment {
         DOCKER_IMAGE = "spring-k8s-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
-        KUBE_CONFIG_CREDENTIALS = "kubeconfig"  // Add your kubeconfig in Jenkins credentials
     }
+
     stages {
-	stage('Git Checkout') {
+
+        stage('Checkout') {
             steps {
-                  git branch: 'main', url: 'https://github.com/Laouini-islem/mon-devops.git'
+                checkout scm
             }
         }
-		
-	stage('Maven Build') {
+
+        stage('Maven Build') {
             steps {
                 sh 'mvn clean install -DskipTests'
             }
         }
-		stage('Docker Build & Push') {
+
+        stage('Docker Build & Push') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'dockerhub-credentials',
@@ -34,19 +37,21 @@ environment {
                 }
             }
         }
-    
-    stage('Deploy to Kubernetes') {
-    steps {
-        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-            sh '''
-                echo "Using kubeconfig at $KUBECONFIG"
-                kubectl get nodes
-                kubectl apply -f k8s/deployment.yaml
-            '''
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                        export KUBECONFIG=$KUBECONFIG
+                        kubectl get nodes
+                        kubectl apply -f k8s/
+                        kubectl rollout restart deployment spring-app
+                        kubectl rollout status deployment spring-app
+                    '''
+                }
+            }
         }
     }
-}
 
-}
-		    
+   
 }
