@@ -8,7 +8,7 @@ environment {
     stages {
 	stage('Git Checkout') {
             steps {
-                  git branch: 'main', url: 'https://github.com/tarek-ayari/devops.git'
+                  git branch: 'main', url: 'https://github.com/Laouini-islem/mon-devops.git'
             }
         }
 		
